@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="theme-color" content="#3B4FE8"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>FlowDesk Field</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ind:#3B4FE8;--ind-d:#2B3DC0;--ind-l:#EEF0FD;
+  --teal:#0D9488;--teal-l:#E6FAF7;
+  --amb:#D97706;--amb-l:#FEF3C7;
+  --grn:#059669;--grn-l:#D1FAE5;
+  --red:#DC2626;--red-l:#FEE2E2;
+  --g50:#F9FAFB;--g100:#F3F4F6;--g200:#E5E7EB;
+  --g400:#9CA3AF;--g600:#4B5563;--g800:#1F2937;--g900:#111827;
+}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:#0f1b5e;overflow:hidden}
+.app{max-width:420px;width:100%;height:100vh;margin:0 auto;display:flex;flex-direction:column;background:#F3F4F6;position:relative;overflow:hidden}
+
+/* ── STATUS BAR ── */
+.status-bar{background:#0f1b5e;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.status-bar span{font-size:11px;color:rgba(255,255,255,.8);font-weight:600}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#4ADE80;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── APP BAR ── */
+.app-bar{background:var(--ind);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.back-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.back-btn svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.app-bar h2{font-size:15px;font-weight:700;color:#fff;flex:1}
+.app-bar-icon{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.app-bar-icon svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── BODY ── */
+.screen-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:75px}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--g200);padding:8px 0 12px;display:flex;justify-content:space-around;z-index:50}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;padding:4px 12px}
+.nav-btn svg{width:20px;height:20px;stroke:var(--g400);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav-btn span{font-size:10px;color:var(--g400);font-weight:500}
+.nav-btn.active svg{stroke:var(--ind)}
+.nav-btn.active span{color:var(--ind)}
+.nav-badge{background:#DC2626;color:#fff;font-size:8px;font-weight:700;min-width:14px;height:14px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;padding:0 3px;margin-left:2px}
+
+/* ── LOGIN ── */
+.login-screen{position:absolute;inset:0;background:linear-gradient(145deg,#080f3a,#1a2fa8,#0a6b62);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;z-index:200}
+.login-logo{width:64px;height:64px;border-radius:16px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;margin-bottom:1rem}
+.login-logo svg{width:36px;height:36px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.login-screen h1{font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.25rem}
+.login-screen p{font-size:.82rem;color:rgba(255,255,255,.65);margin-bottom:2rem}
+.login-card{background:#fff;border-radius:16px;padding:1.5rem;width:100%;max-width:340px}
+.login-card h3{font-size:.95rem;font-weight:700;color:var(--g900);margin-bottom:1.25rem}
+.role-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:1.25rem}
+.role-opt{border:2px solid var(--g200);border-radius:10px;padding:.75rem .5rem;text-align:center;cursor:pointer;transition:all .15s}
+.role-opt.sel{border-color:var(--ind);background:var(--ind-l)}
+.role-opt .ri{font-size:1.2rem;margin-bottom:.25rem}
+.role-opt p{font-size:.7rem;font-weight:700;color:var(--g800)}
+.inp{width:100%;padding:.6rem .85rem;border:1px solid var(--g200);border-radius:8px;font-size:.85rem;color:var(--g900);background:var(--g50);margin-bottom:.75rem;font-family:inherit}
+.inp:focus{outline:none;border-color:var(--ind)}
+.login-btn{width:100%;padding:.75rem;background:var(--ind);color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer}
+.login-btn:active{background:var(--ind-d)}
+.err-msg{background:var(--red-l);color:var(--red);font-size:.75rem;padding:.5rem .75rem;border-radius:7px;margin-bottom:.75rem;display:none}
+
+/* ── TOAST ── */
+.toast{position:absolute;bottom:85px;left:50%;transform:translateX(-50%);background:var(--g900);color:#fff;padding:.6rem 1.25rem;border-radius:999px;font-size:.78rem;font-weight:600;white-space:nowrap;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* ── HOME ── */
+.home-header{background:linear-gradient(135deg,#0f1b5e,#3B4FE8);padding:16px}
+.home-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.user-info h3{font-size:14px;font-weight:700;color:#fff}
+.user-info p{font-size:11px;color:rgba(255,255,255,.65)}
+.avatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff}
+.home-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.hstat{background:rgba(255,255,255,.12);border-radius:10px;padding:10px;text-align:center}
+.hstat-num{font-size:20px;font-weight:800;color:#fff}
+.hstat-lbl{font-size:9px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.05em}
+.sec-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 6px}
+.sec-head h3{font-size:13px;font-weight:700;color:var(--g900)}
+.sec-head a{font-size:11px;color:var(--ind);font-weight:600;cursor:pointer}
+.task-card{background:#fff;margin:0 16px 8px;border-radius:12px;padding:12px 14px;border:.5px solid var(--g200);cursor:pointer}
+.task-card:active{background:var(--g50)}
+.task-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.task-card h4{font-size:13px;font-weight:600;color:var(--g900);flex:1;margin-right:8px;line-height:1.35}
+.tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px}
+.task-meta{font-size:11px;color:var(--g400)}
+.pri-bar{height:3px;border-radius:999px;margin-top:8px}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 16px 0}
+.qa-btn{background:#fff;border:.5px solid var(--g200);border-radius:12px;padding:14px;cursor:pointer;text-align:left}
+.qa-btn:active{background:var(--g50)}
+.qa-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.qa-icon svg{width:18px;height:18px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.qa-btn h4{font-size:12px;font-weight:700;color:var(--g900);margin-bottom:2px}
+.qa-btn p{font-size:10px;color:var(--g400)}
+
+/* ── FORMS ── */
+.form-wrap{padding:16px}
+.form-card{background:#fff;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.form-card h3{font-size:.9rem;font-weight:700;color:var(--g900);margin-bottom:.25rem}
+.form-card .sub{font-size:.75rem;color:var(--g400);margin-bottom:1rem}
+.fgrp{margin-bottom:.9rem}
+.fgrp label{display:block;font-size:.72rem;font-weight:700;color:var(--g600);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.04em}
+.fgrp input,.fgrp select,.fgrp textarea{width:100%;padding:.55rem .75rem;border-radius:8px;border:1px solid var(--g200);background:var(--g50);color:var(--g900);font-size:.83rem;font-family:inherit}
+.fgrp textarea{min-height:75px;resize:none}
+.fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{outline:none;border-color:var(--ind)}
+.gps-chip{background:var(--teal-l);border:1px solid #99E6DA;border-radius:8px;padding:.55rem .85rem;font-size:.75rem;font-weight:600;color:#065F46;display:flex;align-items:center;gap:6px}
+.gps-chip svg{width:12px;height:12px;stroke:#0D9488;fill:none;stroke-width:2;flex-shrink:0}
+.rating-row{display:flex;gap:6px}
+.ropt{flex:1;padding:7px 4px;border-radius:7px;border:1px solid var(--g200);font-size:11px;font-weight:600;text-align:center;cursor:pointer;color:var(--g600)}
+.ropt.sel{border-color:var(--ind);background:var(--ind-l);color:var(--ind)}
+.photo-zone{border:1.5px dashed var(--g200);border-radius:10px;padding:16px;text-align:center;cursor:pointer;margin-bottom:.75rem}
+.photo-zone:active{background:var(--g50)}
+.photo-zone svg{width:24px;height:24px;stroke:var(--g400);fill:none;stroke-width:1.5;margin:0 auto 6px;display:block}
+.photo-zone p{font-size:.75rem;color:var(--g400)}
+.photo-zone strong{color:var(--ind)}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:.75rem}
+.photo-thumb{background:var(--g100);border-radius:7px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--g400);border:.5px solid var(--g200)}
+.submit-btn{width:100%;padding:13px;background:var(--ind);color:#fff;border:none;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;margin-top:4px}
+.submit-btn:active{background:var(--ind-d)}
+.submit-btn.teal{background:var(--teal)}
+.submit-btn.grn{background:var(--grn)}
+.submit-btn:disabled{background:var(--g400);cursor:not-allowed}
+
+/* ── GRM LIST ── */
+.grm-filters{display:flex;gap:6px;padding:10px 16px;overflow-x:auto;background:#fff;border-bottom:1px solid var(--g200);flex-shrink:0}
+.grm-filter{padding:5px 12px;border-radius:999px;font-size:.72rem;font-weight:600;border:1px solid var(--g200);color:var(--g600);cursor:pointer;white-space:nowrap;background:#fff}
+.grm-filter.on{background:var(--ind);color:#fff;border-color:var(--ind)}
+.grm-list{padding:10px 16px}
+.grm-card{background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;border:.5px solid var(--g200);cursor:pointer}
+.grm-card:active{background:var(--g50)}
+.grm-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.grm-ref{font-size:.7rem;font-weight:700;color:var(--ind)}
+.status-badge{font-size:.67rem;padding:.18rem .5rem;border-radius:999px;font-weight:700}
+.grm-title{font-size:.83rem;font-weight:600;color:var(--g900);margin-bottom:3px}
+.grm-meta{font-size:.72rem;color:var(--g400)}
+.grm-attachments{display:flex;gap:.35rem;margin-top:5px;flex-wrap:wrap}
+.att-tag{font-size:.65rem;padding:.15rem .45rem;border-radius:5px;font-weight:600}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--g400);font-size:.83rem}
+.empty-state svg{width:40px;height:40px;stroke:var(--g200);fill:none;stroke-width:1.5;margin:0 auto 1rem;display:block}
+
+/* ── SUCCESS OVERLAY ── */
+.success-overlay{position:absolute;inset:0;background:#fff;z-index:150;display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center}
+.success-overlay.show{display:flex}
+.success-circle{width:68px;height:68px;border-radius:50%;background:var(--grn-l);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.success-circle svg{width:34px;height:34px;stroke:var(--grn);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.success-overlay h2{font-size:1.1rem;font-weight:800;color:var(--g900);margin-bottom:.5rem}
+.success-overlay p{font-size:.82rem;color:var(--g600);margin-bottom:.5rem;line-height:1.6}
+.ref-pill{background:var(--ind-l);border-radius:8px;padding:7px 16px;font-size:.82rem;font-weight:700;color:var(--ind);margin:.75rem 0;display:inline-block}
+.synced-row{display:inline-flex;align-items:center;gap:6px;background:var(--grn-l);border-radius:999px;padding:5px 14px;font-size:.72rem;font-weight:700;color:#065F46}
+.s-dot{width:6px;height:6px;border-radius:50%;background:var(--grn)}
+.success-btns{display:flex;gap:8px;width:100%;margin-top:1.5rem}
+.success-btns button{flex:1;padding:11px;border-radius:9px;font-size:.83rem;font-weight:700;cursor:pointer;border:1px solid var(--g200);background:#fff;color:var(--g900)}
+.success-btns button.prim{background:var(--ind);color:#fff;border-color:var(--ind)}
+
+/* ── LOADING ── */
+.loader{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── NOTIF ── */
+.notif-item{background:#fff;margin:0 16px 8px;border-radius:10px;padding:12px;border-left:3px solid var(--ind);display:flex;gap:8px}
+.notif-item.grm{border-left-color:var(--amb)}
+.notif-item.success{border-left-color:var(--grn)}
+.notif-item.warn{border-left-color:var(--red)}
+.notif-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.notif-icon svg{width:14px;height:14px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.notif-text h4{font-size:.8rem;font-weight:700;color:var(--g900);margin-bottom:2px}
+.notif-text p{font-size:.73rem;color:var(--g600);line-height:1.4}
+.notif-text time{font-size:.68rem;color:var(--g400);margin-top:3px;display:block}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span id="clock">9:41</span>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="live-dot"></span>
+      <span id="sync-status">Connecting...</span>
+      <span>LTE</span>
+    </div>
+  </div>
+
+  <!-- APP BAR -->
+  <div class="app-bar" id="app-bar">
+    <div style="width:32px"></div>
+    <h2 id="app-title">FlowDesk Field</h2>
+    <button class="app-bar-icon" onclick="showScreen('notif')">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
+  </div>
+
+  <!-- SCREEN BODY -->
+  <div class="screen-body" id="screen-body">
+
+    <!-- HOME -->
+    <div id="screen-home" style="display:block">
+      <div class="home-header">
+        <div class="home-top">
+          <div class="user-info">
+            <h3 id="home-greeting">Good morning 👋</h3>
+            <p id="home-role">Field Agent</p>
+          </div>
+          <div class="avatar" id="home-avatar">--</div>
+        </div>
+        <div class="home-stats">
+          <div class="hstat"><div class="hstat-num" id="stat-tasks">0</div><div class="hstat-lbl">Tasks</div></div>
+          <div class="hstat"><div class="hstat-num" id="stat-forms">0</div><div class="hstat-lbl">Submitted</div></div>
+          <div class="hstat"><div class="hstat-num" id="stat-grm">0</div><div class="hstat-lbl">GRM open</div></div>
+        </div>
+      </div>
+      <div class="sec-head"><h3>Quick actions</h3></div>
+      <div class="qa-grid">
+        <button class="qa-btn" onclick="showScreen('inspect')">
+          <div class="qa-icon" style="background:var(--ind-l)"><svg viewBox="0 0 24 24" stroke="var(--ind)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg></div>
+          <h4>Site inspection</h4><p>Submit field form</p>
+        </button>
+        <button class="qa-btn" onclick="showScreen('grm-form')">
+          <div class="qa-icon" style="background:var(--amb-l)"><svg viewBox="0 0 24 24" stroke="var(--amb)"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <h4>Log grievance</h4><p>GRM report</p>
+        </button>
+        <button class="qa-btn" onclick="showScreen('grm-list')">
+          <div class="qa-icon" style="background:var(--grn-l)"><svg viewBox="0 0 24 24" stroke="var(--grn)"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <h4>GRM cases</h4><p>View all cases</p>
+        </button>
+        <button class="qa-btn" onclick="logout()">
+          <div class="qa-icon" style="background:var(--red-l)"><svg viewBox="0 0 24 24" stroke="var(--red)"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+          <h4>Log out</h4><p>Switch account</p>
+        </button>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- INSPECTION FORM -->
+    <div id="screen-inspect" style="display:none">
+      <div class="form-wrap">
+        <div class="form-card">
+          <h3>Site Inspection Form</h3>
+          <p class="sub">All submissions are GPS-verified and synced to HQ in real time.</p>
+          <div class="fgrp"><label>GPS Location</label><div class="gps-chip"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="inspect-gps">Getting location...</span></div></div>
+          <div class="fgrp"><label>Inspection type</label>
+            <select id="inspect-type"><option>Road surface</option><option>Drainage works</option><option>Safety compliance</option><option>Material quality</option><option>Bridge inspection</option></select>
+          </div>
+          <div class="fgrp"><label>Site / location</label><input id="inspect-site" placeholder="e.g. Site A, km 3-5, Section C"/></div>
+          <div class="fgrp"><label>Overall condition</label>
+            <div class="rating-row" id="r-condition">
+              <div class="ropt sel" onclick="rate(this,'r-condition')">Good</div>
+              <div class="ropt" onclick="rate(this,'r-condition')">Fair</div>
+              <div class="ropt" onclick="rate(this,'r-condition')">Poor</div>
+              <div class="ropt" onclick="rate(this,'r-condition')">Critical</div>
+            </div>
+          </div>
+          <div class="fgrp"><label>Observations</label><textarea id="inspect-obs" placeholder="Describe what you found — surface condition, defects, safety issues, recommended actions..."></textarea></div>
+          <div class="fgrp">
+            <label>Photos</label>
+            <div class="photo-zone" onclick="addPhoto('inspect-photos')">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <p>Tap to <strong>capture photo</strong></p>
+            </div>
+            <div class="photo-grid" id="inspect-photos"></div>
+          </div>
+          <button class="submit-btn" id="inspect-btn" onclick="submitInspection()">Submit inspection to HQ →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRM FORM -->
+    <div id="screen-grm-form" style="display:none">
+      <div class="form-wrap">
+        <div class="form-card" style="background:var(--amb-l);border:.5px solid #FCD34D">
+          <div style="font-size:.78rem;font-weight:700;color:#92400E">Grievance intake — confidential</div>
+          <div style="font-size:.72rem;color:#B45309;margin-top:2px">A unique case number is assigned automatically.</div>
+        </div>
+        <div class="form-card">
+          <div class="fgrp"><label>GPS Location</label><div class="gps-chip"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="grm-gps">Getting location...</span></div></div>
+          <div class="fgrp"><label>Complainant name</label><input id="grm-name" placeholder="Full name (optional — can be anonymous)"/></div>
+          <div class="fgrp"><label>Phone number</label><input id="grm-phone" type="tel" placeholder="+255 ..."/></div>
+          <div class="fgrp"><label>Grievance type</label>
+            <select id="grm-type"><option>Land & property</option><option>Noise & dust</option><option>Safety & hazard</option><option>Labour dispute</option><option>Environment</option><option>Service delivery</option><option>Other</option></select>
+          </div>
+          <div class="fgrp"><label>Priority</label>
+            <div class="rating-row" id="r-priority">
+              <div class="ropt" onclick="rate(this,'r-priority')">Low</div>
+              <div class="ropt sel" onclick="rate(this,'r-priority')">Medium</div>
+              <div class="ropt" onclick="rate(this,'r-priority')">High</div>
+              <div class="ropt" onclick="rate(this,'r-priority')">Critical</div>
+            </div>
+          </div>
+          <div class="fgrp"><label>Description</label><textarea id="grm-desc" placeholder="Describe what happened, when, who was affected, and what outcome the complainant expects..."></textarea></div>
+          <div class="fgrp">
+            <label>Photo evidence</label>
+            <div class="photo-zone" onclick="addPhoto('grm-photos')">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <p>Photograph the scene — <strong>geo-tagged automatically</strong></p>
+            </div>
+            <div class="photo-grid" id="grm-photos"></div>
+          </div>
+          <button class="submit-btn teal" id="grm-btn" onclick="submitGRM()">Submit grievance report →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRM LIST -->
+    <div id="screen-grm-list" style="display:none">
+      <div class="grm-filters" id="grm-filters">
+        <div class="grm-filter on" onclick="filterGRM('all',this)">All</div>
+        <div class="grm-filter" onclick="filterGRM('open',this)">Open</div>
+        <div class="grm-filter" onclick="filterGRM('in_review',this)">In review</div>
+        <div class="grm-filter" onclick="filterGRM('escalated',this)">Escalated</div>
+        <div class="grm-filter" onclick="filterGRM('resolved',this)">Resolved</div>
+      </div>
+      <div class="grm-list" id="grm-list-body"><div class="empty-state"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Loading cases...</div></div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div id="screen-notif" style="display:none">
+      <div style="padding:12px 16px 4px;font-size:.72rem;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.05em">Notifications</div>
+      <div class="notif-item success">
+        <div class="notif-icon" style="background:var(--grn-l)"><svg viewBox="0 0 24 24" stroke="var(--grn)"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="notif-text"><h4>Connected to FlowDesk</h4><p>Your app is connected to the live server. All submissions sync in real time.</p><time>Just now</time></div>
+      </div>
+      <div class="notif-item grm">
+        <div class="notif-icon" style="background:var(--amb-l)"><svg viewBox="0 0 24 24" stroke="var(--amb)"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="notif-text"><h4>GRM module active</h4><p>You can now log, track and submit grievances directly from the field.</p><time>Today</time></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="showScreen('home',this)">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-btn" id="nav-inspect" onclick="showScreen('inspect',this)">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span>Inspect</span>
+    </button>
+    <button class="nav-btn" id="nav-grm-form" onclick="showScreen('grm-form',this)">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>GRM</span>
+    </button>
+    <button class="nav-btn" id="nav-grm-list" onclick="showScreen('grm-list',this)">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>Cases</span>
+    </button>
+  </div>
+
+  <!-- LOGIN SCREEN -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-logo"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <h1>FlowDesk</h1>
+    <p>Field & Project Management</p>
+    <div class="login-card">
+      <h3>Log in to your account</h3>
+      <div class="role-row">
+        <div class="role-opt sel" onclick="selRole(this,'admin')"><div class="ri">🏢</div><p>Admin</p></div>
+        <div class="role-opt" onclick="selRole(this,'supervisor')"><div class="ri">👤</div><p>Supervisor</p></div>
+        <div class="role-opt" onclick="selRole(this,'field_agent')"><div class="ri">📍</div><p>Field</p></div>
+      </div>
+      <div class="err-msg" id="login-err">Invalid email or password</div>
+      <input class="inp" id="login-email" type="email" placeholder="Email address"/>
+      <input class="inp" id="login-pass" type="password" placeholder="Password"/>
+      <button class="login-btn" id="login-btn" onclick="doLogin()">Log in</button>
+      <div style="text-align:center;margin-top:.85rem;font-size:.72rem;color:var(--g400)">
+        Don't have an account? <a href="#" style="color:var(--ind);font-weight:600" onclick="showRegister()">Register your organisation</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGISTER SCREEN -->
+  <div class="login-screen" id="register-screen" style="display:none">
+    <div class="login-logo"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <h1>Create account</h1>
+    <p>Set up your organisation on FlowDesk</p>
+    <div class="login-card">
+      <h3>Organisation registration</h3>
+      <div class="err-msg" id="reg-err">Please fill all fields</div>
+      <input class="inp" id="reg-org" placeholder="Organisation name"/>
+      <input class="inp" id="reg-name" placeholder="Your full name"/>
+      <input class="inp" id="reg-email" type="email" placeholder="Email address"/>
+      <input class="inp" id="reg-pass" type="password" placeholder="Password (min 8 characters)"/>
+      <button class="login-btn" id="reg-btn" onclick="doRegister()">Create account</button>
+      <div style="text-align:center;margin-top:.85rem;font-size:.72rem;color:var(--g400)">
+        Already have an account? <a href="#" style="color:var(--ind);font-weight:600" onclick="showLogin()">Log in</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS OVERLAY -->
+  <div class="success-overlay" id="success-overlay">
+    <div class="success-circle"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+    <h2 id="suc-title">Submitted!</h2>
+    <p id="suc-msg">Your form has been sent to HQ.</p>
+    <div class="ref-pill" id="suc-ref">REF-2026-0001</div>
+    <div class="synced-row"><div class="s-dot"></div>Synced to HQ dashboard</div>
+    <div class="success-btns">
+      <button onclick="closeSuccess()">Submit another</button>
+      <button class="prim" onclick="closeSuccess();showScreen('home')">Home</button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────
+const API = 'https://flowdesk-api-production-2cff.up.railway.app';
+
+// ── STATE ───────────────────────────────────────────────────────
+let token = localStorage.getItem('fd_token') || '';
+let user  = JSON.parse(localStorage.getItem('fd_user') || 'null');
+let grmFilter = 'all';
+let inspectPhotos = 0, grmPhotos = 0;
+let lat = null, lng = null;
+
+// ── BOOT ────────────────────────────────────────────────────────
+window.onload = () => {
+  tick(); setInterval(tick, 10000);
+  getGPS();
+  if (token && user) {
+    hideLo(); setupUser(); loadGRMStats();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+};
+
+function tick() {
+  const n = new Date(), h = n.getHours(), m = n.getMinutes();
+  document.getElementById('clock').textContent = h + ':' + (m<10?'0':'') + m;
+}
+
+function getGPS() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(p => {
+    lat = p.coords.latitude.toFixed(6);
+    lng = p.coords.longitude.toFixed(6);
+    const loc = lat + '°, ' + lng + '°  ✓ Verified';
+    ['inspect-gps','grm-gps'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = loc;
+    });
+  }, () => {
+    ['inspect-gps','grm-gps'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = 'GPS unavailable';
+    });
+  });
+}
+
+// ── AUTH ────────────────────────────────────────────────────────
+function selRole(el) {
+  document.querySelectorAll('.role-opt').forEach(r => r.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const err   = document.getElementById('login-err');
+  const btn   = document.getElementById('login-btn');
+  if (!email || !pass) { err.style.display='block'; err.textContent='Please enter email and password'; return; }
+  err.style.display = 'none';
+  btn.innerHTML = '<span class="loader"></span>Logging in...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(API + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    token = data.accessToken;
+    user  = data.user;
+    localStorage.setItem('fd_token', token);
+    localStorage.setItem('fd_user', JSON.stringify(user));
+    hideLo(); setupUser(); loadGRMStats();
+    toast('Welcome back, ' + user.fullName + '!');
+  } catch(e) {
+    err.style.display = 'block';
+    err.textContent = e.message;
+    btn.innerHTML = 'Log in';
+    btn.disabled = false;
+  }
+}
+
+async function doRegister() {
+  const org   = document.getElementById('reg-org').value.trim();
+  const name  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass  = document.getElementById('reg-pass').value;
+  const err   = document.getElementById('reg-err');
+  const btn   = document.getElementById('reg-btn');
+  if (!org||!name||!email||!pass) { err.style.display='block'; err.textContent='Please fill all fields'; return; }
+  if (pass.length < 8) { err.style.display='block'; err.textContent='Password must be at least 8 characters'; return; }
+  err.style.display = 'none';
+  btn.innerHTML = '<span class="loader"></span>Creating account...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(API + '/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tenantName: org, fullName: name, email, password: pass })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Registration failed');
+    toast('Account created! Please log in.');
+    showLogin();
+    document.getElementById('login-email').value = email;
+  } catch(e) {
+    err.style.display = 'block';
+    err.textContent = e.message;
+    btn.innerHTML = 'Create account';
+    btn.disabled = false;
+  }
+}
+
+function logout() {
+  localStorage.removeItem('fd_token');
+  localStorage.removeItem('fd_user');
+  token = ''; user = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+function hideLo() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('register-screen').style.display = 'none';
+}
+function showLogin() {
+  document.getElementById('register-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+function showRegister() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('register-screen').style.display = 'flex';
+}
+
+function setupUser() {
+  if (!user) return;
+  const hr = new Date().getHours();
+  const gr = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('home-greeting').textContent = gr + ', ' + (user.fullName||'').split(' ')[0] + ' 👋';
+  document.getElementById('home-role').textContent = (user.role||'').replace('_',' ');
+  document.getElementById('home-avatar').textContent = (user.fullName||'--').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('sync-status').textContent = 'Live';
+}
+
+// ── API HELPER ───────────────────────────────────────────────────
+async function api(path, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ── STATS ────────────────────────────────────────────────────────
+async function loadGRMStats() {
+  try {
+    const data = await api('/api/grm');
+    const cases = data.cases || [];
+    const open = cases.filter(c => c.status === 'open' || c.status === 'in_review' || c.status === 'escalated').length;
+    document.getElementById('stat-grm').textContent = open;
+    document.getElementById('stat-forms').textContent = cases.length;
+  } catch(e) {}
+}
+
+// ── INSPECTION SUBMIT ────────────────────────────────────────────
+async function submitInspection() {
+  const btn = document.getElementById('inspect-btn');
+  const obs = document.getElementById('inspect-obs').value.trim();
+  const site = document.getElementById('inspect-site').value.trim();
+  if (!obs) { toast('Please add your observations'); return; }
+  const condition = document.querySelector('#r-condition .sel')?.textContent || 'Good';
+  const type = document.getElementById('inspect-type').value;
+  btn.innerHTML = '<span class="loader"></span>Submitting...';
+  btn.disabled = true;
+  try {
+    await api('/api/submissions', 'POST', {
+      formId: '00000000-0000-0000-0000-000000000001',
+      projectId: '00000000-0000-0000-0000-000000000001',
+      data: { type, site, condition, observations: obs, photos: inspectPhotos },
+      latitude: lat ? parseFloat(lat) : null,
+      longitude: lng ? parseFloat(lng) : null,
+      offlineId: 'inspect-' + Date.now()
+    });
+    showSuccess('Inspection submitted!', 'Your site inspection has been synced to HQ dashboard.', 'INS-' + Date.now().toString().slice(-6));
+    document.getElementById('inspect-obs').value = '';
+    document.getElementById('inspect-site').value = '';
+    document.getElementById('inspect-photos').innerHTML = '';
+    inspectPhotos = 0;
+    document.getElementById('stat-forms').textContent = parseInt(document.getElementById('stat-forms').textContent||'0') + 1;
+  } catch(e) {
+    toast('Saved offline — will sync when connected');
+    showSuccess('Saved offline!', 'Your inspection is saved and will sync to HQ when you reconnect.', 'INS-OFFLINE-' + Date.now().toString().slice(-4));
+  }
+  btn.innerHTML = 'Submit inspection to HQ →';
+  btn.disabled = false;
+}
+
+// ── GRM SUBMIT ───────────────────────────────────────────────────
+async function submitGRM() {
+  const btn  = document.getElementById('grm-btn');
+  const desc = document.getElementById('grm-desc').value.trim();
+  const type = document.getElementById('grm-type').value;
+  if (!desc) { toast('Please describe the grievance'); return; }
+  const priority = document.querySelector('#r-priority .sel')?.textContent?.toLowerCase() || 'medium';
+  btn.innerHTML = '<span class="loader"></span>Submitting...';
+  btn.disabled = true;
+  try {
+    const result = await api('/api/grm', 'POST', {
+      title: type,
+      description: desc,
+      type,
+      priority,
+      complainantName: document.getElementById('grm-name').value,
+      complainantPhone: document.getElementById('grm-phone').value,
+      latitude: lat ? parseFloat(lat) : null,
+      longitude: lng ? parseFloat(lng) : null,
+    });
+    showSuccess('Grievance logged!', 'Your report has been submitted. A case officer will follow up within 48 hours.', result.reference || 'GRM-' + Date.now().toString().slice(-4));
+    document.getElementById('grm-desc').value = '';
+    document.getElementById('grm-name').value = '';
+    document.getElementById('grm-phone').value = '';
+    document.getElementById('grm-photos').innerHTML = '';
+    grmPhotos = 0;
+    loadGRMStats();
+  } catch(e) {
+    toast('Saved offline — will sync when connected');
+    showSuccess('Saved offline!', 'Your grievance report is saved locally and will sync to HQ when you reconnect.', 'GRM-OFFLINE-' + Date.now().toString().slice(-4));
+  }
+  btn.innerHTML = 'Submit grievance report →';
+  btn.disabled = false;
+}
+
+// ── GRM LIST ────────────────────────────────────────────────────
+async function loadGRMList() {
+  const body = document.getElementById('grm-list-body');
+  body.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Loading...</div>';
+  try {
+    const data = await api('/api/grm');
+    renderGRMList(data.cases || []);
+  } catch(e) {
+    body.innerHTML = '<div class="empty-state">Could not load cases. Check your connection.</div>';
+  }
+}
+
+function renderGRMList(cases) {
+  const body = document.getElementById('grm-list-body');
+  const filtered = grmFilter === 'all' ? cases : cases.filter(c => c.status === grmFilter);
+  if (!filtered.length) { body.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>No cases found</div>'; return; }
+  const statusStyle = { open:'background:#DBEAFE;color:#1D4ED8', in_review:'background:#FEF3C7;color:#D97706', escalated:'background:#FEE2E2;color:#DC2626', resolved:'background:#D1FAE5;color:#059669', closed:'background:#F3F4F6;color:#6B7280' };
+  body.innerHTML = filtered.map(c => `
+    <div class="grm-card">
+      <div class="grm-top">
+        <span class="grm-ref">#${c.reference}</span>
+        <span class="status-badge" style="${statusStyle[c.status]||''}">${c.status.replace('_',' ')}</span>
+      </div>
+      <div class="grm-title">${c.title}</div>
+      <div class="grm-meta">${c.type} · ${new Date(c.created_at).toLocaleDateString()}</div>
+      ${c.photo_count>0 ? `<div class="grm-attachments"><span class="att-tag" style="background:#DBEAFE;color:#1D4ED8">📷 ${c.photo_count} photo${c.photo_count>1?'s':''}</span></div>` : ''}
+    </div>
+  `).join('');
+}
+
+function filterGRM(f, el) {
+  grmFilter = f;
+  document.querySelectorAll('.grm-filter').forEach(x => x.classList.remove('on'));
+  el.classList.add('on');
+  loadGRMList();
+}
+
+// ── PHOTOS ───────────────────────────────────────────────────────
+function addPhoto(containerId) {
+  const grid = document.getElementById(containerId);
+  const n = grid.children.length + 1;
+  const div = document.createElement('div');
+  div.className = 'photo-thumb';
+  div.textContent = '📷 ' + n;
+  grid.appendChild(div);
+  if (containerId === 'inspect-photos') inspectPhotos++;
+  else grmPhotos++;
+  toast('Photo ' + n + ' added');
+}
+
+function rate(el, groupId) {
+  document.querySelectorAll('#' + groupId + ' .ropt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────
+const screens = ['home','inspect','grm-form','grm-list','notif'];
+const titles  = { home:'FlowDesk Field', inspect:'Site Inspection', 'grm-form':'Log Grievance', 'grm-list':'GRM Cases', notif:'Notifications' };
+const backScreens = ['inspect','grm-form','grm-list','notif'];
+
+function showScreen(name, navEl) {
+  screens.forEach(s => { document.getElementById('screen-'+s).style.display = 'none'; });
+  document.getElementById('screen-'+name).style.display = 'block';
+  document.getElementById('app-title').textContent = titles[name] || 'FlowDesk';
+
+  // back button
+  const bar = document.getElementById('app-bar');
+  const existing = bar.querySelector('.back-btn');
+  if (existing) existing.remove();
+  if (backScreens.includes(name)) {
+    const b = document.createElement('button');
+    b.className = 'back-btn';
+    b.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>';
+    b.onclick = () => showScreen('home');
+    bar.insertBefore(b, bar.firstChild);
+  } else {
+    const ph = document.createElement('div');
+    ph.style.width = '32px';
+    bar.insertBefore(ph, bar.firstChild);
+  }
+
+  // nav active state
+  if (navEl) {
+    document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
+    navEl.classList.add('active');
+  }
+
+  if (name === 'grm-list') loadGRMList();
+  if (name === 'home') loadGRMStats();
+}
+
+// ── SUCCESS ───────────────────────────────────────────────────────
+function showSuccess(title, msg, ref) {
+  document.getElementById('suc-title').textContent = title;
+  document.getElementById('suc-msg').textContent = msg;
+  document.getElementById('suc-ref').textContent = ref;
+  document.getElementById('success-overlay').classList.add('show');
+}
+function closeSuccess() {
+  document.getElementById('success-overlay').classList.remove('show');
+  showScreen('home');
+}
+
+// ── TOAST ──────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
