@@ -740,7 +740,7 @@ function getGPS() {
 }
 
 function routeUser() {
-  if (!user) return showPage('page-login');
+  if (!user || !user.role) return showPage('page-login');
   if (user.role === 'admin' || user.role === 'supervisor') {
     showPage('page-hq');
     setupHQ();
@@ -850,8 +850,8 @@ async function patch(path, body) {
 // ══ HQ SETUP ════════════════════════════════════════════════════
 function setupHQ() {
   if (!user) return;
-  document.getElementById('hq-av').textContent   = initials(user.fullName);
-  document.getElementById('hq-name').textContent = user.fullName;
+  document.getElementById('hq-av').textContent   = initials(user.fullName || '');
+  document.getElementById('hq-name').textContent = user.fullName || 'User';
   document.getElementById('hq-role').textContent = (user.role||'').replace('_',' ');
 }
 
@@ -1174,11 +1174,13 @@ function setupField() {
   if (!user) return;
   const h = new Date().getHours();
   const g = h<12?'Good morning':h<17?'Good afternoon':'Good evening';
-  document.getElementById('f-greeting').textContent = g + ', ' + (user.fullName||'').split(' ')[0] + ' 👋';
+  const firstName = (user.fullName || 'there').split(' ')[0];
+  document.getElementById('f-greeting').textContent = g + ', ' + firstName + ' 👋';
   document.getElementById('f-role').textContent     = (user.role||'').replace('_',' ');
-  document.getElementById('f-av').textContent       = initials(user.fullName);
+  document.getElementById('f-av').textContent       = initials(user.fullName || '');
   document.getElementById('fsync').textContent      = 'Live';
-  document.getElementById('grm-agent').value        = user.fullName || '';
+  const agentEl = document.getElementById('grm-agent');
+  if (agentEl) agentEl.value = user.fullName || '';
 }
 
 async function fLoadStats() {
