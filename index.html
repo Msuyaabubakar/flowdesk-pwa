@@ -717,7 +717,7 @@ window.onload = async () => {
     showPage('page-login');
   }
   // Auto-refresh HQ every 30s
-  setInterval(() => { if (token && user && (user.role === 'admin' || user.role === 'supervisor')) hqRefresh(); }, 30000);
+  setInterval(() => { if (token && user && ((user && user.role ? user.role : '') === 'admin' || (user && user.role ? user.role : '') === 'supervisor')) hqRefresh(); }, 30000);
 };
 
 function tickClock() {
@@ -740,8 +740,8 @@ function getGPS() {
 }
 
 function routeUser() {
-  if (!user || !user.role) return showPage('page-login');
-  if (user.role === 'admin' || user.role === 'supervisor') {
+  if (!user || !(user && user.role ? user.role : '')) return showPage('page-login');
+  if ((user && user.role ? user.role : '') === 'admin' || (user && user.role ? user.role : '') === 'supervisor') {
     showPage('page-hq');
     setupHQ();
     hqLoadAll();
@@ -780,12 +780,13 @@ async function doLogin() {
   try {
     const data = await post('/api/auth/login', { email, password: pass });
     token = data.accessToken;
-    user  = data.user;
+    user  = data.user || null;
+    if (!user) { showErr(err, 'Login failed — no user data returned'); btn.innerHTML = 'Log in'; btn.disabled = false; return; }
     localStorage.setItem('fd_token', token);
     localStorage.setItem('fd_user', JSON.stringify(user));
     btn.innerHTML = 'Log in'; btn.disabled = false;
     routeUser();
-    toast('Welcome back, ' + user.fullName + '! 👋');
+    toast('Welcome back, ' + (user && user.fullName ? user.fullName : '') + '! 👋');
   } catch(e) {
     showErr(err, e.message);
     btn.innerHTML = 'Log in'; btn.disabled = false;
@@ -850,9 +851,9 @@ async function patch(path, body) {
 // ══ HQ SETUP ════════════════════════════════════════════════════
 function setupHQ() {
   if (!user) return;
-  document.getElementById('hq-av').textContent   = initials(user.fullName || '');
-  document.getElementById('hq-name').textContent = user.fullName || 'User';
-  document.getElementById('hq-role').textContent = (user.role||'').replace('_',' ');
+  document.getElementById('hq-av').textContent   = initials((user && user.fullName ? user.fullName : '') || '');
+  document.getElementById('hq-name').textContent = (user && user.fullName ? user.fullName : '') || 'User';
+  document.getElementById('hq-role').textContent = ((user && user.role ? user.role : '')||'').replace('_',' ');
 }
 
 async function hqLoadAll() {
@@ -1146,7 +1147,7 @@ async function addMember() {
   if (!name||!email||!pass) { toast('Please fill all fields'); return; }
   if (pass.length < 8) { toast('Password must be at least 8 characters'); return; }
   try {
-    await post('/api/auth/register', { tenantName: user.fullName+' org', fullName: name, email, password: pass }, true);
+    await post('/api/auth/register', { tenantName: (user && user.fullName ? user.fullName : '')+' org', fullName: name, email, password: pass }, true);
     toast(name + ' added to the team!');
     document.getElementById('invite-form').classList.add('hidden');
     ['inv-name','inv-email','inv-pass'].forEach(id => document.getElementById(id).value = '');
@@ -1174,13 +1175,13 @@ function setupField() {
   if (!user) return;
   const h = new Date().getHours();
   const g = h<12?'Good morning':h<17?'Good afternoon':'Good evening';
-  const firstName = (user.fullName || 'there').split(' ')[0];
+  const firstName = ((user && user.fullName ? user.fullName : '') || 'there').split(' ')[0];
   document.getElementById('f-greeting').textContent = g + ', ' + firstName + ' 👋';
-  document.getElementById('f-role').textContent     = (user.role||'').replace('_',' ');
-  document.getElementById('f-av').textContent       = initials(user.fullName || '');
+  document.getElementById('f-role').textContent     = ((user && user.role ? user.role : '')||'').replace('_',' ');
+  document.getElementById('f-av').textContent       = initials((user && user.fullName ? user.fullName : '') || '');
   document.getElementById('fsync').textContent      = 'Live';
   const agentEl = document.getElementById('grm-agent');
-  if (agentEl) agentEl.value = user.fullName || '';
+  if (agentEl) agentEl.value = (user && user.fullName ? user.fullName : '') || '';
 }
 
 async function fLoadStats() {
