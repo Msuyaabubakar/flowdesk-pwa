@@ -699,7 +699,8 @@ const API = 'https://flowdesk-api-production-2cff.up.railway.app';
 
 // ══ STATE ═══════════════════════════════════════════════════════
 let token = localStorage.getItem('fd_token') || '';
-let user  = JSON.parse(localStorage.getItem('fd_user') || 'null');
+let user  = null;
+try { user = JSON.parse(localStorage.getItem('fd_user') || 'null'); } catch(e) { user = null; }
 let allGRM = [], allSubs = [], fGRMFilter = 'all';
 let lat = null, lng = null;
 let selectedReport = 'grm';
